@@ -18,13 +18,25 @@ def get_token(domain, token):
     if args.links:
         json_data = {"maxresults": 10000, "media": 0, "target": 3, "term": domain, "terminate": [None], "timeout": 20}
 
-    response = requests.post(url, headers=headers, json=json_data)
-    key = response.text
-    status = response.status_code
-    if status == 402:
-        exit('[-] Your IP is rate limited. Try switching your IP address then re-run.')
-    else:
+    try:
+        response = requests.post(url, headers=headers, json=json_data)
+        status = response.status_code
+        
+        if status == 402:
+            exit('[-] Your IP is rate limited. Try switching your IP address then re-run.')
+        elif status != 200:
+            print(f'[-] Received non-200 status code: {status}')
+            print(f'[-] Response text: {response.text}')
+            exit('[-] Request failed.')
+        
+        key = response.text
+        print(f'[+] Received response: {key}')  # Debugging: print the response content
         return key
+
+    except requests.RequestException as e:
+        print(f'[-] An error occurred: {e}')
+        exit('[-] Failed to make request.')
+
 
 def make_request(key, token):
     key = json.loads(key)['id']
